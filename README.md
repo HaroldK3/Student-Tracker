@@ -14,6 +14,17 @@ StudentPath is a ***cross-platform*** internship management application that hel
 - **<ins>Analytics & Reports</ins>**
     - Generate attendance reporting for academic credit & compliance. 
 - **<ins>Secure Access</ins>**
-    - Authentication and role-based permissions to protect student data. 
+    - Authentication and role-based permissions to protect student data.
+
+## **Tech Stack**
+- **<ins>Frontend</ins>**: Kivy/React Native
+- **<ins>Backend</ins>**: FastAPI
+- **<ins>Database</ins>**: SQLite
+- **<ins>Geolocation</ins>**: iPapi
+- **<ins>Deployment</ins>**: Github Actions
+
+## **Development Phases**
+**<ins>Sprint 1</ins>**: Requirments, enviornment setup, UI wireframe, database schema, app name and logo. 
+**<ins></ins>**
 
 ## Issues
