@@ -1,7 +1,7 @@
 # 🎓 PathMate // Student-Tracker
 ### A cross-platform Python application for managing student internships effectively.
 
-StudentPath is a **cross-platform internship management system** that helps universities and organizations track student placements, monitor progress, and ensure accountability through geolocation-based check-ins.  
+PathMate is a **cross-platform internship management system** that helps universities and organizations track student placements, monitor progress, and ensure accountability through geolocation-based check-ins.  
 It provides transparency and security for students, staff, and administrators.
 
 ---
@@ -80,10 +80,11 @@ It provides transparency and security for students, staff, and administrators.
 **Jorge Nunez**
 **Toby Crabtree**
 *East Tennessee State University*  
-📚 *Student Intern Tracker / StudentPath Project*
+📚 *Student Intern Tracker / PathMate Project*
 
 ---
 
 > _“Track progress. Build accountability. Empower student success.”_
+
 
 
