@@ -69,18 +69,20 @@ It provides transparency and security for students, staff, and administrators.
 ---
 
 ## 🧩 Known Issues / Future Improvements
-- Integrate push notifications for daily check-ins  
-- Enhance analytics visualization  
-- Add supervisor messaging feature  
-- Migrate from SQLite to PostgreSQL for scalability  
+-
 
 ---
 
-## 👩‍💻 Author
+## 👩‍💻 Authors
 **Kaylee Harold**  
+**Palwasha Newell**
+**Robert Freschi**
+**Jorge Nunez**
+**Toby Crabtree**
 *East Tennessee State University*  
 📚 *Student Intern Tracker / StudentPath Project*
 
 ---
 
 > _“Track progress. Build accountability. Empower student success.”_
+
