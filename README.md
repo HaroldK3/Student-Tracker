@@ -75,16 +75,17 @@ It provides transparency and security for students, staff, and administrators.
 
 ## 👩‍💻 Authors
 **Kaylee Harold**  
-**Palwasha Newell**
-**Robert Freschi**
-**Jorge Nunez**
-**Toby Crabtree**
+**Palwasha Newell**  
+**Robert Freschi**  
+**Jorge Nunez**  
+**Toby Crabtree**  
 *East Tennessee State University*  
 📚 *Student Intern Tracker / PathMate Project*
 
 ---
 
 > _“Track progress. Build accountability. Empower student success.”_
+
 
 
 
