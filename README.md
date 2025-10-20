@@ -1,27 +1,86 @@
-# Student-Tracker // StudentPath
-## An application in Python designed to help colleges and businesses manage student internships effectively.
-StudentPath is a cross-platform internship management application that helps universities and organizations track students in their internships. This ensures accountability through placements, progress monitoring, and geolocation-based check-ins to ensure the student is where they are supposed to be both on site and in their positions.
+# 🎓 StudentPath // Student-Tracker
+### A cross-platform Python application for managing student internships effectively.
 
-## Key Features
--Location-Verified Check-ins
-  -With the use of GPS/IP based geolocation, you can verify attendance at internship sites.
--Hours & Progress Tracking
-  -Log hours worked, view time sheets, and see major milestones.
--Multi-Role Access Distinct user dashboards for students, staff, and admin.
--Feedback & Evaluation
-  -Supervisor submitted reviews and feedback.
--Analytics & Reports
-  -Generate attendance reporting for academic credit & compliance.
--Secure Access
-  -Authentication and role-based permissions to protect student data.
--Tech Stack
-  -Frontend: Kivy/React Native
-  -Backend: FastAPI
-  -Database: SQLite
-  -Geolocation: iPapi
-  -Deployment: Github Actions
-  -Development Phases
-## Sprint 1: Requirments, enviornment setup, UI wireframe, database schema, app name and logo.
+StudentPath is a **cross-platform internship management system** that helps universities and organizations track student placements, monitor progress, and ensure accountability through geolocation-based check-ins.  
+It provides transparency and security for students, staff, and administrators.
 
-## Issues
+---
 
+## 🚀 Key Features
+
+### 📍 Location-Verified Check-ins
+- Uses **GPS/IP-based geolocation** to verify attendance at internship sites.
+- Ensures students are physically present at assigned locations.
+
+### ⏱️ Hours & Progress Tracking
+- Log hours worked and major milestones.
+- View detailed timesheets and progress reports.
+
+### 👥 Multi-Role Access
+- Separate **dashboards for students, staff, and administrators**.
+- Role-based permissions ensure users only access what they need.
+
+### 📝 Feedback & Evaluation
+- Supervisors can submit reviews and performance evaluations.
+- Supports academic grading or compliance reviews.
+
+### 📊 Analytics & Reports
+- Automatically generate attendance and performance reports.
+- Supports export for **academic credit tracking** and **compliance reporting**.
+
+### 🔐 Secure Access
+- Implements **authentication and authorization** layers.
+- Protects sensitive student data with role-based permissions.
+
+---
+
+## 🧰 Tech Stack
+
+| Layer | Technology |
+|-------|-------------|
+| **Frontend** | Kivy / React Native |
+| **Backend** | FastAPI |
+| **Database** | SQLite |
+| **Geolocation** | iPapi API |
+| **Deployment** | GitHub Actions |
+
+---
+
+## 🗓️ Development Phases
+
+### **Sprint 1: Planning & Setup**
+**Focus:** Requirements gathering, environment setup, UI wireframes, database schema, app branding.  
+**Deliverables:**
+- Defined user stories and INVEST criteria  
+- Figma wireframes or sketches  
+- Database ERD schema  
+- App name & logo finalized  
+- Repository and dependencies configured  
+
+### **Sprint 2: Implementation & Testing**
+**Focus:** Core feature development and integration.  
+**Deliverables:**
+- Backend endpoints and API integration  
+- Basic student and admin dashboards  
+- Geolocation and authentication features  
+- Functional prototype demo  
+- Testing and debugging  
+
+---
+
+## 🧩 Known Issues / Future Improvements
+- Integrate push notifications for daily check-ins  
+- Enhance analytics visualization  
+- Add supervisor messaging feature  
+- Migrate from SQLite to PostgreSQL for scalability  
+
+---
+
+## 👩‍💻 Author
+**Kaylee Harold**  
+*East Tennessee State University*  
+📚 *Student Intern Tracker / StudentPath Project*
+
+---
+
+> _“Track progress. Build accountability. Empower student success.”_
