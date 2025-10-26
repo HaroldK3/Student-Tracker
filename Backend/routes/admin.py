@@ -1,21 +1,22 @@
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from ..db import get_db                   
-from Backend.models import User, UserOut             
-from pydantic import BaseModel
+from Backend.models import User, UserOut, UserCreate          
 from typing import List
 
-
+## HTTP status codes
+## https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
 
-## Users display
+## Users display (multiple)
 @router.get("/users", response_model=List[UserOut])
 def get_users(db: Session = Depends(get_db)):
     users = db.query(User).all()
     return users
     
-## User display
+## User display (one)
 @router.get("/users/{user_id)}", response_model=UserOut)
 def get_user(user_id: int, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.UserId == user_id).first()
@@ -23,8 +24,24 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User Not Found")
     return user
 
+## Get Students (multiple)
+
+## Get a student (one)
+
 ## Create_User
-    
+@router.post("/users/create_user", response_model=UserOut)
+def create_user(user: UserCreate, db: Session = Depends(get_db)):
+    existing = db.query(User).filter(User.Email == user.Email).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already in use.")
+
+    new_user = User(**user.model_dump(), CreatedAtUtc=datetime.utcnow().isoformat())
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    return new_user
+
 ## Updating a user
 
 ## Deleting a user
