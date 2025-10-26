@@ -1,63 +1,45 @@
 from datetime import date
 import time
-from fastapi import Body, FastAPI, Depends, Request, Response, status, Query, Path, HTTPException
-from fastapi.responses import PlainTextResponse
+from sqlalchemy import Column, Integer, String, Boolean
+from Backend.db import Base
 from pydantic import BaseModel
-from typing import Optional
-import sqlite3
 
-class User(BaseModel):
+class User(Base):
+    __tablename__ = "Users"
+    UserId = Column(Integer, primary_key=True, autoincrement=True)
+    FirstName = Column(String, nullable=False)
+    LastName = Column(String, nullable=False)
+    Email = Column(String, unique=True, nullable=False)
+    Role = Column(String, nullable=False)
+    CreatedAtUtc = Column(String, nullable=False)
+    IsActive = Column(Boolean, default=True)
+
+
+class UserOut(BaseModel):
     UserId: int
     FirstName: str
     LastName: str
     Email: str
     Role: str
-    CreatedAtUTC: time
+    CreatedAtUtc: str
     IsActive: bool
 
-class Student(BaseModel):
-    StudentId: int
-    UniversityId: int
-    FirstName: str
-    LastName: str
-    Email: str
-    PhoneE164: str
-    Program: str
-    Year: str
-    Status: str
-    CreatedAtUTC: time
 
-class Positions(BaseModel):
-    PositionId: int
-    Title: str
-    Company: str
-    SiteLocation: str
-    SupervisorName: str
-    SupervisorEmail: str
+##class Student(Base):
 
-class Cohorts(BaseModel):
-    CohortId: int
-    CohortName: str
-    Term: str
-    InstructorUserId: int
-    CreatedAtUTC: time
 
-class StudentAssignments(BaseModel):
-    AssignmentId: int
-    StudentId: int
-    PositionId: int
-    CohortId: int
-    StartDate: str
-    EndDate: str
-    CreatedAtUTC: time
+##class Positions(Base):
 
-class Attendance(BaseModel):
-    AttendanceId: int
-    AssignmentId: int
-    AttendanceDate: str
-    AttendanceTime: str
-    Status: str
-    SetByUserId: int
-    Note: str
-    CreatedAtUTC: time
+
+##class Cohorts(Base):
+
+
+##class StudentAssignments(Base):
+
+
+##class Attendance(Base):
+
+
+
+
 
