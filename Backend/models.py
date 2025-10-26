@@ -1,8 +1,10 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime
 from Backend.db import Base
-from pydantic import BaseModel
+from pydantic import BaseModel, constr
 from typing import Optional
 from datetime import datetime
+
+VALID_ROLES = {"ADMIN", "INSTRUCTOR", "IT"}
 
 ## Users
 class User(Base):
@@ -20,11 +22,25 @@ class UserBase(BaseModel):
     FirstName: str
     LastName: str
     Email: str
-    Role: str
+    Role: constr(to_upper=True) # type: ignore
     IsActive: bool = True
+
+    def valid_role(cls, value):
+        if value not in VALID_ROLES:
+            raise ValueError(f"Role must be one of {VALID_ROLES}")
 
 class UserCreate(UserBase):
     pass
+
+class UserUpdate(BaseModel):
+    FirstName: Optional[str] = None
+    LastName: Optional[str] = None
+    Email: Optional[str] = None
+    Role: Optional[str] = None
+    IsActive: Optional[bool] = None
+    
+    class Config:
+        orm_mode = True
 
 class UserOut(UserBase):
     UserId: int

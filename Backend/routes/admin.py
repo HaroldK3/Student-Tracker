@@ -2,7 +2,7 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from ..db import get_db                   
-from Backend.models import User, UserOut, UserCreate          
+from Backend.models import User, UserOut, UserCreate, UserUpdate         
 from typing import List
 
 ## HTTP status codes
@@ -43,6 +43,18 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     return new_user
 
 ## Updating a user
+@router.put("/users/{user_id}", response_model=UserOut)
+def update_user(user_id: int, update_data: UserUpdate, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.UserId == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found.")
+    
+    for key, value in update_data.model_dump(exclude_unset=True):
+        setattr(user, key, value)
+
+    db.commit()
+    db.refresh(user)
+    return user
 
 ## Deleting a user
 
