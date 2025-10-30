@@ -49,7 +49,9 @@ def update_user(user_id: int, update_data: UserUpdate, db: Session = Depends(get
     if not user:
         raise HTTPException(status_code=404, detail="User not found.")
     
-    for key, value in update_data.model_dump(exclude_unset=True):
+    update_dict = update_data.model_dump(exclude_unset=True)
+
+    for key, value in update_dict.items():
         setattr(user, key, value)
 
     db.commit()
@@ -57,6 +59,17 @@ def update_user(user_id: int, update_data: UserUpdate, db: Session = Depends(get
     return user
 
 ## Deleting a user
+@router.delete("/users/delete_user/{user_id}")
+def delete_user(user_id: int, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.UserId == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found.")
+    
+    db.delete(user)
+    db.commit()
+
+    return
+
 
 ## Get all dashboard metrics
 
