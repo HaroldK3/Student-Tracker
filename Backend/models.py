@@ -1,7 +1,7 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, Boolean, DateTime
+from sqlalchemy import Column, ForeignKey, Integer, String, Boolean, DateTime, Float
 from sqlalchemy.orm import relationship
 from Backend.db import Base
-from pydantic import BaseModel, constr
+from pydantic import BaseModel, validator
 from typing import Optional
 from datetime import datetime
 
@@ -26,6 +26,7 @@ class UserBase(BaseModel):
     Role: str 
     IsActive: bool = True
 
+    @validator("Role")
     def valid_role(cls, value):
         value = value.upper()
         if value not in VALID_ROLES:
@@ -64,6 +65,7 @@ class Student(Base):
     Program = Column(String(120), nullable=True)
     Year = Column(String(20), nullable=True)
     Status = Column(String(20), nullable=False, default="Active")
+    GPA = Column(Float, nullable = True)
     CreatedAtUtc = Column(DateTime, default=datetime.utcnow)
 
 class StudentOut(BaseModel):
@@ -75,14 +77,40 @@ class StudentOut(BaseModel):
     Program: str
     Year: str
     Status: str = "IsActive"
+    GPA: Optional[float] = None
+
+    class Config:
+        omr_mode = True
+
+class StudentCreate(BaseModel):
+    UniversityId: int
+    FirstName: str
+    LastName: str
+    Email: str
+    PhoneE164: Optional[str] = None
+    Program: str
+    Year: str
+    Status: str = "IsActive"
+    GPA: Optional[float] = None
     
+class StudentUpdate(BaseModel):
+    FirstName: Optional[str] = None
+    LastName: Optional[str] = None
+    Email: Optional[str] = None
+    PhoneE164: Optional[str] = None
+    Program: Optional[str] = None
+    Year: Optional[str] = None
+    Status: Optional[str] = None
+    GPA: Optional[float] = None
+
+
 ##class StudentAssignments(Base):
 class StudentAssignment(Base):
     __tablename__ = "StudentAssignments"
 
     AssignmentId = Column(Integer, primary_key=True, index=True)
     StudentId = Column(Integer, ForeignKey("Students.StudentId"), nullable=False)
-    UserId = Column(Integer, ForeignKey("Users.UserId"), nullable=False)  # <-- teacher
+    UserId = Column(Integer, ForeignKey("Users.UserId"), nullable=False)
     IsActive = Column(Boolean, default=True)
 
     Student = relationship("Student", backref="Assignments")
@@ -90,7 +118,7 @@ class StudentAssignment(Base):
 
 class AssignmentCreate(BaseModel):
     StudentId: int
-    InstructorId: int
+    UserId: int
     PositionId: int
     CohortId: Optional[int] = None
 
