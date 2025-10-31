@@ -38,11 +38,12 @@ class UserUpdate(BaseModel):
     FirstName: Optional[str] = None
     LastName: Optional[str] = None
     Email: Optional[str] = None
-    Role: Optional[str] = None
+    Role: Optional[constr(to_upper=True)] = None #type: ignore
     IsActive: Optional[bool] = None
-    
-    class Config:
-        orm_mode = True
+
+    def valid_role(cls, value):
+        if value not in VALID_ROLES:
+            raise ValueError(f"Role must be one of {VALID_ROLES}")
 
 class UserOut(UserBase):
     UserId: int
