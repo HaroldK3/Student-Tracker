@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime
+from sqlalchemy import Column, ForeignKey, Integer, String, Boolean, DateTime
+from sqlalchemy.orm import relationship
 from Backend.db import Base
 from pydantic import BaseModel, constr
 from typing import Optional
@@ -22,10 +23,11 @@ class UserBase(BaseModel):
     FirstName: str
     LastName: str
     Email: str
-    Role: constr(to_upper=True) # type: ignore
+    Role: str 
     IsActive: bool = True
 
     def valid_role(cls, value):
+        value = value.upper()
         if value not in VALID_ROLES:
             raise ValueError(f"Role must be one of {VALID_ROLES}")
 
@@ -53,7 +55,7 @@ class UserOut(UserBase):
 class Student(Base):
     __tablename__ = "Students"
     StudentId = Column(Integer, primary_key=True, index=True)
-    UniversityId = Column(String(20), unique=True, nullable=False)
+    UniversityId = Column(Integer, unique=True, nullable=False)
     FirstName = Column(String(100), nullable=False)
     LastName = Column(String(100), nullable=False)
     Email = Column(String(256), unique=True, nullable=False)
@@ -74,12 +76,37 @@ class StudentOut(BaseModel):
     Status: str = "IsActive"
     
 ##class StudentAssignments(Base):
+class StudentAssignment(Base):
+    __tablename__ = "StudentAssignments"
 
-##class Cohorts(Base):
+    AssignmentId = Column(Integer, primary_key=True, index=True)
+    StudentId = Column(Integer, ForeignKey("Students.StudentId"), nullable=False)
+    UserId = Column(Integer, ForeignKey("Users.UserId"), nullable=False)  # <-- teacher
+    IsActive = Column(Boolean, default=True)
+
+    Student = relationship("Student", backref="Assignments")
+    Instructor = relationship("User", backref="AssignedStudents")
+
+class AssignmentCreate(BaseModel):
+    StudentId: int
+    InstructorId: int
+    PositionId: int
+    CohortId: Optional[int] = None
 
 
 ## Other
-##class Positions(Base):
+class Positions(Base):
+    __tablename__ = "Positions"
+
+    PositionId = Column(Integer, primary_key=True, index=True)
+    PositionTitle = Column(String, nullable=False)    
+    Company = Column(String, nullable=False)          
+    Location = Column(String, nullable=False)         
+    ContactName = Column(String, nullable=False)      
+    ContactEmail = Column(String, nullable=False)     
+    StartDate = Column(DateTime, nullable=False)      
+    EndDate = Column(DateTime, nullable=False)        
+    CreatedAtUtc = Column(DateTime, nullable=False, default=datetime.utcnow)
 
 ##class Attendance(Base):
 

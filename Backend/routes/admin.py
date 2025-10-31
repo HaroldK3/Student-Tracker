@@ -2,7 +2,7 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from ..db import get_db                   
-from Backend.models import User, UserOut, UserCreate, UserUpdate         
+from Backend.models import User, UserOut, UserCreate, UserUpdate, Student, AssignmentCreate, StudentAssignment, Positions
 from typing import List
 
 ## HTTP status codes
@@ -49,7 +49,7 @@ def update_user(user_id: int, update_data: UserUpdate, db: Session = Depends(get
     if not user:
         raise HTTPException(status_code=404, detail="User not found.")
     
-    for key, value in update_data.model_dump(exclude_unset=True):
+    for key, value in update_data.model_dump(exclude_unset=True).items():
         setattr(user, key, value)
 
     db.commit()
@@ -57,11 +57,49 @@ def update_user(user_id: int, update_data: UserUpdate, db: Session = Depends(get
     return user
 
 ## Deleting a user
+@router.delete("/users/{user_id}", status_code=204)
+def delete_user(user_id: int, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.UserId == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    ## Soft deletes
+    user.IsActive = False
+
+    db.commit()
+    return
 
 ## Get all dashboard metrics
+@router.get("/dashboard/metrics")
+def get_dashboard_metrics(db: Session = Depends(get_db)):
+    total_students = db.query(Student).count()
 
 ## Get Admin logs
 
 ## Assign a teacher to a student
+@router.post("/assign", status_code=201)
+def assign_teacher(data: AssignmentCreate, db: Session = Depends(get_db)):
+    student = db.query(Student).filter(Student.StudentId == data.StudentId).first()
+    instructor = db.query(User).filter(
+        User.UserId == data.InstructorUserId,
+        User.Role == "INSTRUCTOR"
+        ).first()
 
+    if not student: 
+        raise HTTPException(status_code=404, detail="Student not found.")
+    if not instructor:
+        raise HTTPException(status_code=404, detail="Instrustor not found.")
+    
+    
+
+    assignment = StudentAssignment(
+        StudentId = data.StudentId
+        UserId = data.InstructorUserId
+        IsActive = True
+    )
+
+    db.add(assignment)
+    db.commit()
+    db.refresh(assignment)
+    return assignment
 
