@@ -1,71 +1,117 @@
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-from typing import List
-
-from ..db import get_db
+from sqlalchemy.orm import Session, relationship
+from sqlalchemy import Column, Integer, DateTime, Boolean, ForeignKey
+from ..db import get_db, Base
 from Backend.models import Student
 
-from sqlalchemy import Table, Column, Integer, String, Boolean, DateTime, ForeignKey
-from sqlalchemy.orm import declarative_base, relationship
-from Backend.db import Base
+# router setup
+router = APIRouter(prefix="/attendance", tags=["Attendance"])
 
-# Temporary in-file table until Attendance is formally added
+# -----------------------------------------------------------------------------
+# Local Attendance model (since it's not in Backend/models.py right now)
+# -----------------------------------------------------------------------------
 class Attendance(Base):
     __tablename__ = "Attendance"
 
     AttendanceId = Column(Integer, primary_key=True, index=True)
-    StudentId = Column(Integer, ForeignKey("Students.StudentId"))
+    StudentId = Column(Integer, ForeignKey("Students.StudentId"), nullable=False)
     CheckInUtc = Column(DateTime, default=datetime.utcnow)
     CheckOutUtc = Column(DateTime, nullable=True)
     IsApproved = Column(Boolean, default=False)
 
-    student = relationship("Student", backref="AttendanceRecords")
+    student = relationship("Student")
 
 
-router = APIRouter(prefix="/attendance", tags=["Attendance"])
+# -----------------------------------------------------------------------------
+# ENDPOINTS
+# -----------------------------------------------------------------------------
 
 
-# =============================
-# STUDENT CHECK-IN
-# =============================
-@router.post("/checkin", status_code=201)
-def check_in(data: dict, db: Session = Depends(get_db)):
-    student_id = data.get("StudentId")
+@router.post("/checkin")
+def check_in(payload: dict, db: Session = Depends(get_db)):
+    """
+    Create/check in an attendance record for a student.
+    Expects: { "StudentId": 1 }
+    """
+    student_id = payload.get("StudentId")
+    if not student_id:
+        raise HTTPException(status_code=400, detail="StudentId is required.")
+
+    # make sure student exists
     student = db.query(Student).filter(Student.StudentId == student_id).first()
     if not student:
         raise HTTPException(status_code=404, detail="Student not found.")
 
-    attendance = Attendance(StudentId=student_id, CheckInUtc=datetime.utcnow())
-    db.add(attendance)
+    record = Attendance(
+        StudentId=student_id,
+        CheckInUtc=datetime.utcnow(),
+        CheckOutUtc=None,
+        IsApproved=False,
+    )
+    db.add(record)
     db.commit()
-    db.refresh(attendance)
-    return {"detail": f"Student ID {student_id} checked in successfully."}
+    db.refresh(record)
+
+    return {
+        "AttendanceId": record.AttendanceId,
+        "StudentId": record.StudentId,
+        "CheckInUtc": record.CheckInUtc,
+        "CheckOutUtc": record.CheckOutUtc,
+        "IsApproved": record.IsApproved,
+    }
 
 
-# =============================
-# STUDENT CHECK-OUT
-# =============================
 @router.put("/checkout/{attendance_id}")
 def check_out(attendance_id: int, db: Session = Depends(get_db)):
-    attendance = db.query(Attendance).filter(Attendance.AttendanceId == attendance_id).first()
-    if not attendance:
+    """
+    Sets the checkout time for an existing attendance record.
+    """
+    record = db.query(Attendance).filter(Attendance.AttendanceId == attendance_id).first()
+    if not record:
         raise HTTPException(status_code=404, detail="Attendance record not found.")
 
-    attendance.CheckOutUtc = datetime.utcnow()
+    record.CheckOutUtc = datetime.utcnow()
     db.commit()
-    db.refresh(attendance)
-    return {"detail": f"Attendance ID {attendance_id} checked out successfully."}
+    db.refresh(record)
+
+    return {
+        "AttendanceId": record.AttendanceId,
+        "StudentId": record.StudentId,
+        "CheckInUtc": record.CheckInUtc,
+        "CheckOutUtc": record.CheckOutUtc,
+        "IsApproved": record.IsApproved,
+    }
 
 
-# =============================
-# GET ATTENDANCE BY STUDENT
-# =============================
+@router.put("/approve/{attendance_id}")
+def approve(attendance_id: int, db: Session = Depends(get_db)):
+    """
+    Admin/teacher approval of an attendance record.
+    """
+    record = db.query(Attendance).filter(Attendance.AttendanceId == attendance_id).first()
+    if not record:
+        raise HTTPException(status_code=404, detail="Attendance record not found.")
+
+    record.IsApproved = True
+    db.commit()
+    db.refresh(record)
+
+    return {
+        "AttendanceId": record.AttendanceId,
+        "StudentId": record.StudentId,
+        "CheckInUtc": record.CheckInUtc,
+        "CheckOutUtc": record.CheckOutUtc,
+        "IsApproved": record.IsApproved,
+    }
+
+
 @router.get("/student/{student_id}")
 def get_student_attendance(student_id: int, db: Session = Depends(get_db)):
+    """
+    Get all attendance records for a given student.
+    """
     records = db.query(Attendance).filter(Attendance.StudentId == student_id).all()
-    if not records:
-        raise HTTPException(status_code=404, detail="No attendance records found for this student.")
     return [
         {
             "AttendanceId": r.AttendanceId,
@@ -76,17 +122,3 @@ def get_student_attendance(student_id: int, db: Session = Depends(get_db)):
         }
         for r in records
     ]
-
-
-# =============================
-# APPROVE ATTENDANCE RECORD
-# =============================
-@router.put("/approve/{attendance_id}")
-def approve_attendance(attendance_id: int, db: Session = Depends(get_db)):
-    attendance = db.query(Attendance).filter(Attendance.AttendanceId == attendance_id).first()
-    if not attendance:
-        raise HTTPException(status_code=404, detail="Attendance record not found.")
-    attendance.IsApproved = True
-    db.commit()
-    db.refresh(attendance)
-    return {"detail": f"Attendance ID {attendance_id} approved successfully."}
