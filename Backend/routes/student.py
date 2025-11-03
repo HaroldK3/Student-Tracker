@@ -1,55 +1,46 @@
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from db import get_db
-import models
+from ..db import get_db
+from Backend.models import Student, StudentOut, StudentUpdate
 
-router = APIRouter(
-    prefix="/student",
-    tags=["Student"]
-)
+router = APIRouter(prefix="/student", tags=["Student"])
 
 
-@router.get("/", response_model=list[models.StudentOut])
-def get_students(db: Session = Depends(get_db)):
-    students = db.query(models.Student).all()
-    return students
-
-
-@router.get("/profile/{student_id}", response_model=models.StudentOut)
-def get_student(student_id: int, db: Session = Depends(get_db)):
-    student = db.query(models.Student).filter(models.Student.id == student_id).first()
+# Get a student's own profile
+@router.get("/profile/{student_id}", response_model=StudentOut)
+def get_profile(student_id: int, db: Session = Depends(get_db)):
+    student = db.query(Student).filter(Student.StudentId == student_id).first()
     if not student:
-        raise HTTPException(status_code=404, detail="Student not found")
+        raise HTTPException(status_code=404, detail="Student not found.")
     return student
 
 
-@router.post("/", response_model=models.StudentOut)
-def create_student(student_in: models.StudentCreate, db: Session = Depends(get_db)):
-    student = models.Student(**student_in.dict())
-    db.add(student)
+# Update a student's own profile
+@router.put("/profile/{student_id}", response_model=StudentOut)
+def update_profile(student_id: int, data: StudentUpdate, db: Session = Depends(get_db)):
+    student = db.query(Student).filter(Student.StudentId == student_id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found.")
+
+    update_dict = data.model_dump(exclude_unset=True)
+    for key, value in update_dict.items():
+        setattr(student, key, value)
+
     db.commit()
     db.refresh(student)
     return student
 
 
-@router.put("/update-profile/{student_id}", response_model=models.StudentOut)
-def update_student(student_id: int, student_in: models.StudentUpdate, db: Session = Depends(get_db)):
-    student = db.query(models.Student).filter(models.Student.id == student_id).first()
-    if not student:
-        raise HTTPException(status_code=404, detail="Student not found")
-    for k, v in student_in.dict(exclude_unset=True).items():
-        setattr(student, k, v)
-    db.commit()
-    db.refresh(student)
-    return student
+# (Optional placeholders based on your sketch)
+@router.get("/feedback/{student_id}")
+def get_feedback(student_id: int):
+    # frontend can fill this later
+    return {"detail": "feedback endpoint placeholder", "student_id": student_id}
 
 
-@router.delete("/{student_id}")
-def delete_student(student_id: int, db: Session = Depends(get_db)):
-    student = db.query(models.Student).filter(models.Student.id == student_id).first()
-    if not student:
-        raise HTTPException(status_code=404, detail="Student not found")
-    db.delete(student)
-    db.commit()
-    return {"detail": "Student deleted"}
+@router.get("/internship/{student_id}")
+def get_internship(student_id: int):
+    # frontend can fill this later
+    return {"detail": "internship endpoint placeholder", "student_id": student_id}
