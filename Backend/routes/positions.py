@@ -9,96 +9,96 @@ from Backend.models import Positions
 router = APIRouter(prefix="/positions", tags=["Positions"])
 
 
-# =============================
+# ---------------------------------------------------------
 # GET ALL POSITIONS
-# =============================
+# ---------------------------------------------------------
 @router.get("/", response_model=List[dict])
 def get_positions(db: Session = Depends(get_db)):
-    positions = db.query(Positions).all()
+    rows = db.query(Positions).all()
     return [
         {
-            "PositionId": p.PositionId,
-            "PositionTitle": p.PositionTitle,
-            "Company": p.Company,
-            "Location": p.Location,
-            "ContactName": p.ContactName,
-            "ContactEmail": p.ContactEmail,
-            "StartDate": p.StartDate,
-            "EndDate": p.EndDate,
-            "CreatedAtUtc": p.CreatedAtUtc,
+            "PositionId": r.PositionId,
+            "PositionTitle": r.PositionTitle,
+            "Company": r.Company,
+            "Location": r.Location,
+            "ContactName": r.ContactName,
+            "ContactEmail": r.ContactEmail,
+            "StartDate": r.StartDate,
+            "EndDate": r.EndDate,
+            "CreatedAtUtc": r.CreatedAtUtc,
         }
-        for p in positions
+        for r in rows
     ]
 
 
-# =============================
+# ---------------------------------------------------------
 # GET ONE POSITION
-# =============================
+# ---------------------------------------------------------
 @router.get("/{position_id}", response_model=dict)
 def get_position(position_id: int, db: Session = Depends(get_db)):
-    position = db.query(Positions).filter(Positions.PositionId == position_id).first()
-    if not position:
+    pos = db.query(Positions).filter(Positions.PositionId == position_id).first()
+    if not pos:
         raise HTTPException(status_code=404, detail="Position not found.")
     return {
-        "PositionId": position.PositionId,
-        "PositionTitle": position.PositionTitle,
-        "Company": position.Company,
-        "Location": position.Location,
-        "ContactName": position.ContactName,
-        "ContactEmail": position.ContactEmail,
-        "StartDate": position.StartDate,
-        "EndDate": position.EndDate,
-        "CreatedAtUtc": position.CreatedAtUtc,
+        "PositionId": pos.PositionId,
+        "PositionTitle": pos.PositionTitle,
+        "Company": pos.Company,
+        "Location": pos.Location,
+        "ContactName": pos.ContactName,
+        "ContactEmail": pos.ContactEmail,
+        "StartDate": pos.StartDate,
+        "EndDate": pos.EndDate,
+        "CreatedAtUtc": pos.CreatedAtUtc,
     }
 
 
-# =============================
+# ---------------------------------------------------------
 # CREATE POSITION
-# =============================
+# ---------------------------------------------------------
 @router.post("/", status_code=201)
-def create_position(data: dict, db: Session = Depends(get_db)):
-    position = Positions(
-        PositionTitle=data.get("PositionTitle"),
-        Company=data.get("Company"),
-        Location=data.get("Location"),
-        ContactName=data.get("ContactName"),
-        ContactEmail=data.get("ContactEmail"),
-        StartDate=data.get("StartDate"),
-        EndDate=data.get("EndDate"),
+def create_position(payload: dict, db: Session = Depends(get_db)):
+    pos = Positions(
+        PositionTitle=payload.get("PositionTitle"),
+        Company=payload.get("Company"),
+        Location=payload.get("Location"),
+        ContactName=payload.get("ContactName"),
+        ContactEmail=payload.get("ContactEmail"),
+        StartDate=payload.get("StartDate"),
+        EndDate=payload.get("EndDate"),
         CreatedAtUtc=datetime.utcnow(),
     )
-    db.add(position)
+    db.add(pos)
     db.commit()
-    db.refresh(position)
-    return {"detail": f"Position '{position.PositionTitle}' created successfully."}
+    db.refresh(pos)
+    return {"detail": f"Position '{pos.PositionTitle}' created.", "PositionId": pos.PositionId}
 
 
-# =============================
+# ---------------------------------------------------------
 # UPDATE POSITION
-# =============================
+# ---------------------------------------------------------
 @router.put("/{position_id}")
-def update_position(position_id: int, data: dict, db: Session = Depends(get_db)):
-    position = db.query(Positions).filter(Positions.PositionId == position_id).first()
-    if not position:
+def update_position(position_id: int, payload: dict, db: Session = Depends(get_db)):
+    pos = db.query(Positions).filter(Positions.PositionId == position_id).first()
+    if not pos:
         raise HTTPException(status_code=404, detail="Position not found.")
 
-    for key, value in data.items():
-        if hasattr(position, key) and value is not None:
-            setattr(position, key, value)
+    for key, value in payload.items():
+        if hasattr(pos, key) and value is not None:
+            setattr(pos, key, value)
 
     db.commit()
-    db.refresh(position)
-    return {"detail": f"Position ID {position_id} updated successfully."}
+    db.refresh(pos)
+    return {"detail": f"Position {position_id} updated."}
 
 
-# =============================
+# ---------------------------------------------------------
 # DELETE POSITION
-# =============================
+# ---------------------------------------------------------
 @router.delete("/{position_id}")
 def delete_position(position_id: int, db: Session = Depends(get_db)):
-    position = db.query(Positions).filter(Positions.PositionId == position_id).first()
-    if not position:
+    pos = db.query(Positions).filter(Positions.PositionId == position_id).first()
+    if not pos:
         raise HTTPException(status_code=404, detail="Position not found.")
-    db.delete(position)
+    db.delete(pos)
     db.commit()
-    return {"detail": f"Position ID {position_id} deleted successfully."}
+    return {"detail": f"Position {position_id} deleted."}
