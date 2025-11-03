@@ -1,46 +1,48 @@
-from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from ..db import get_db
-from Backend.models import Student, StudentOut, StudentUpdate
+from Backend.models import Student
 
 router = APIRouter(prefix="/student", tags=["Student"])
 
 
-# Get a student's own profile
-@router.get("/profile/{student_id}", response_model=StudentOut)
-def get_profile(student_id: int, db: Session = Depends(get_db)):
+# =============================
+# GET STUDENT PROFILE
+# =============================
+@router.get("/profile/{student_id}")
+def get_student_profile(student_id: int, db: Session = Depends(get_db)):
     student = db.query(Student).filter(Student.StudentId == student_id).first()
     if not student:
         raise HTTPException(status_code=404, detail="Student not found.")
-    return student
+    return {
+        "StudentId": student.StudentId,
+        "UniversityId": student.UniversityId,
+        "FirstName": student.FirstName,
+        "LastName": student.LastName,
+        "Email": student.Email,
+        "PhoneE164": student.PhoneE164,
+        "Program": student.Program,
+        "Year": student.Year,
+        "Status": student.Status,
+        "GPA": student.GPA,
+        "CreatedAtUtc": student.CreatedAtUtc,
+    }
 
 
-# Update a student's own profile
-@router.put("/profile/{student_id}", response_model=StudentOut)
-def update_profile(student_id: int, data: StudentUpdate, db: Session = Depends(get_db)):
+# =============================
+# UPDATE STUDENT PROFILE
+# =============================
+@router.put("/profile/{student_id}")
+def update_student_profile(student_id: int, data: dict, db: Session = Depends(get_db)):
     student = db.query(Student).filter(Student.StudentId == student_id).first()
     if not student:
         raise HTTPException(status_code=404, detail="Student not found.")
 
-    update_dict = data.model_dump(exclude_unset=True)
-    for key, value in update_dict.items():
-        setattr(student, key, value)
+    for key, value in data.items():
+        if hasattr(student, key) and value is not None:
+            setattr(student, key, value)
 
     db.commit()
     db.refresh(student)
-    return student
-
-
-# (Optional placeholders based on your sketch)
-@router.get("/feedback/{student_id}")
-def get_feedback(student_id: int):
-    # frontend can fill this later
-    return {"detail": "feedback endpoint placeholder", "student_id": student_id}
-
-
-@router.get("/internship/{student_id}")
-def get_internship(student_id: int):
-    # frontend can fill this later
-    return {"detail": "internship endpoint placeholder", "student_id": student_id}
+    return {"detail": f"Student ID {student_id} updated successfully."}
