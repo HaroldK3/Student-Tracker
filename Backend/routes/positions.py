@@ -1,67 +1,104 @@
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from typing import List
 
 from ..db import get_db
-from Backend.models import Positions, PositionOut, PositionCreate, PositionUpdate
-from typing import List
+from Backend.models import Positions
 
 router = APIRouter(prefix="/positions", tags=["Positions"])
 
 
-# Get all positions
-@router.get("/", response_model=List[PositionOut])
+# =============================
+# GET ALL POSITIONS
+# =============================
+@router.get("/", response_model=List[dict])
 def get_positions(db: Session = Depends(get_db)):
     positions = db.query(Positions).all()
-    return positions
+    return [
+        {
+            "PositionId": p.PositionId,
+            "PositionTitle": p.PositionTitle,
+            "Company": p.Company,
+            "Location": p.Location,
+            "ContactName": p.ContactName,
+            "ContactEmail": p.ContactEmail,
+            "StartDate": p.StartDate,
+            "EndDate": p.EndDate,
+            "CreatedAtUtc": p.CreatedAtUtc,
+        }
+        for p in positions
+    ]
 
 
-# Get one position
-@router.get("/{position_id}", response_model=PositionOut)
+# =============================
+# GET ONE POSITION
+# =============================
+@router.get("/{position_id}", response_model=dict)
 def get_position(position_id: int, db: Session = Depends(get_db)):
     position = db.query(Positions).filter(Positions.PositionId == position_id).first()
     if not position:
         raise HTTPException(status_code=404, detail="Position not found.")
-    return position
+    return {
+        "PositionId": position.PositionId,
+        "PositionTitle": position.PositionTitle,
+        "Company": position.Company,
+        "Location": position.Location,
+        "ContactName": position.ContactName,
+        "ContactEmail": position.ContactEmail,
+        "StartDate": position.StartDate,
+        "EndDate": position.EndDate,
+        "CreatedAtUtc": position.CreatedAtUtc,
+    }
 
 
-# Create a position
-@router.post("/", response_model=PositionOut, status_code=201)
-def create_position(data: PositionCreate, db: Session = Depends(get_db)):
-    position = Positions(**data.model_dump())
+# =============================
+# CREATE POSITION
+# =============================
+@router.post("/", status_code=201)
+def create_position(data: dict, db: Session = Depends(get_db)):
+    position = Positions(
+        PositionTitle=data.get("PositionTitle"),
+        Company=data.get("Company"),
+        Location=data.get("Location"),
+        ContactName=data.get("ContactName"),
+        ContactEmail=data.get("ContactEmail"),
+        StartDate=data.get("StartDate"),
+        EndDate=data.get("EndDate"),
+        CreatedAtUtc=datetime.utcnow(),
+    )
     db.add(position)
     db.commit()
     db.refresh(position)
-    return position
+    return {"detail": f"Position '{position.PositionTitle}' created successfully."}
 
 
-# Update a position
-@router.put("/{position_id}", response_model=PositionOut)
-def update_position(position_id: int, data: PositionUpdate, db: Session = Depends(get_db)):
+# =============================
+# UPDATE POSITION
+# =============================
+@router.put("/{position_id}")
+def update_position(position_id: int, data: dict, db: Session = Depends(get_db)):
     position = db.query(Positions).filter(Positions.PositionId == position_id).first()
     if not position:
         raise HTTPException(status_code=404, detail="Position not found.")
 
-    update_dict = data.model_dump(exclude_unset=True)
-    for key, value in update_dict.items():
-        setattr(position, key, value)
+    for key, value in data.items():
+        if hasattr(position, key) and value is not None:
+            setattr(position, key, value)
 
     db.commit()
     db.refresh(position)
-    return position
+    return {"detail": f"Position ID {position_id} updated successfully."}
 
 
-# Soft delete a position
-@router.delete("/{position_id}", status_code=204)
+# =============================
+# DELETE POSITION
+# =============================
+@router.delete("/{position_id}")
 def delete_position(position_id: int, db: Session = Depends(get_db)):
     position = db.query(Positions).filter(Positions.PositionId == position_id).first()
     if not position:
         raise HTTPException(status_code=404, detail="Position not found.")
-
-    # if you have an IsActive column, do a soft delete
-    if hasattr(position, "IsActive"):
-        position.IsActive = False
-    else:
-        db.delete(position)
-
+    db.delete(position)
     db.commit()
-    return
+    return {"detail": f"Position ID {position_id} deleted successfully."}
