@@ -7,14 +7,15 @@ from Backend.models import Student
 router = APIRouter(prefix="/student", tags=["Student"])
 
 
-# =============================
-# GET STUDENT PROFILE
-# =============================
-@router.get("/profile/{student_id}")
-def get_student_profile(student_id: int, db: Session = Depends(get_db)):
+# ---------------------------------------------------------
+# GET ONE STUDENT (PROFILE)
+# ---------------------------------------------------------
+@router.get("/profile/{student_id}", response_model=dict)
+def get_student(student_id: int, db: Session = Depends(get_db)):
     student = db.query(Student).filter(Student.StudentId == student_id).first()
     if not student:
         raise HTTPException(status_code=404, detail="Student not found.")
+
     return {
         "StudentId": student.StudentId,
         "UniversityId": student.UniversityId,
@@ -30,19 +31,20 @@ def get_student_profile(student_id: int, db: Session = Depends(get_db)):
     }
 
 
-# =============================
-# UPDATE STUDENT PROFILE
-# =============================
+# ---------------------------------------------------------
+# UPDATE STUDENT (PROFILE)
+# ---------------------------------------------------------
 @router.put("/profile/{student_id}")
-def update_student_profile(student_id: int, data: dict, db: Session = Depends(get_db)):
+def update_student(student_id: int, payload: dict, db: Session = Depends(get_db)):
     student = db.query(Student).filter(Student.StudentId == student_id).first()
     if not student:
         raise HTTPException(status_code=404, detail="Student not found.")
 
-    for key, value in data.items():
+    for key, value in payload.items():
+        # only update fields that actually exist on the model
         if hasattr(student, key) and value is not None:
             setattr(student, key, value)
 
     db.commit()
     db.refresh(student)
-    return {"detail": f"Student ID {student_id} updated successfully."}
+    return {"detail": f"Student {student_id} updated."}
