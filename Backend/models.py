@@ -138,7 +138,23 @@ class Positions(Base):
     CreatedAtUtc = Column(DateTime, nullable=False, default=datetime.utcnow)
 
 
+class PositionCreate(BaseModel):
+    Title: str
+    Company: str
+    SiteLocation: str
+    SupervisorName: str
+    SupervisorEmail: str
+    TermStart: Optional[datetime] = None
+    TermEnd: Optional[datetime] = None
 
+class PositionUpdate(BaseModel):
+    Title: Optional[str] = None
+    Company: Optional[str] = None
+    SiteLocation: Optional[str] = None
+    SupervisorName: Optional[str] = None
+    SupervisorEmail: Optional[str] = None
+    TermStart: Optional[datetime] = None
+    TermEnd: Optional[datetime] = None
 
 
 

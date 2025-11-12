@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from Backend.db import get_db
-from Backend.models import Positions
+from Backend.models import Positions, PositionCreate, PositionUpdate
 
 router = APIRouter(prefix="/positions", tags=["Positions"])
 
@@ -41,13 +41,13 @@ def get_position(position_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Position not found.")
     return {
         "PositionId": pos.PositionId,
-        "PositionTitle": pos.PositionTitle,
+        "Title": pos.Title,
         "Company": pos.Company,
-        "Location": pos.Location,
-        "ContactName": pos.ContactName,
-        "ContactEmail": pos.ContactEmail,
-        "StartDate": pos.StartDate,
-        "EndDate": pos.EndDate,
+        "SiteLocation": pos.SiteLocation,
+        "SupervisorName": pos.SupervisorName,
+        "SupervisorEmail": pos.SupervisorEmail,
+        "TermStart": pos.TermStart,
+        "TermEnd": pos.TermEnd,
         "CreatedAtUtc": pos.CreatedAtUtc,
     }
 
@@ -56,34 +56,34 @@ def get_position(position_id: int, db: Session = Depends(get_db)):
 # CREATE POSITION
 # ---------------------------------------------------------
 @router.post("/", status_code=201)
-def create_position(payload: dict, db: Session = Depends(get_db)):
+def create_position(payload: PositionCreate, db: Session = Depends(get_db)):
     pos = Positions(
-        PositionTitle=payload.get("PositionTitle"),
-        Company=payload.get("Company"),
-        Location=payload.get("Location"),
-        ContactName=payload.get("ContactName"),
-        ContactEmail=payload.get("ContactEmail"),
-        StartDate=payload.get("StartDate"),
-        EndDate=payload.get("EndDate"),
+        Title=payload.Title,
+        Company=payload.Company,
+        SiteLocation=payload.SiteLocation,
+        SupervisorName=payload.SupervisorName,
+        SupervisorEmail=payload.SupervisorEmail,
+        TermStart=payload.TermStart,
+        TermEnd=payload.TermEnd,
         CreatedAtUtc=datetime.utcnow(),
     )
     db.add(pos)
     db.commit()
     db.refresh(pos)
-    return {"detail": f"Position '{pos.PositionTitle}' created.", "PositionId": pos.PositionId}
-
+    return {"detail": f"Position '{pos.Title}' created.", "PositionId": pos.PositionId}
 
 # ---------------------------------------------------------
 # UPDATE POSITION
 # ---------------------------------------------------------
 @router.put("/{position_id}")
-def update_position(position_id: int, payload: dict, db: Session = Depends(get_db)):
+def update_position(position_id: int, payload: PositionUpdate, db: Session = Depends(get_db)):
     pos = db.query(Positions).filter(Positions.PositionId == position_id).first()
     if not pos:
         raise HTTPException(status_code=404, detail="Position not found.")
 
-    for key, value in payload.items():
-        if hasattr(pos, key) and value is not None:
+    update_data = payload.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        if hasattr(pos, key):
             setattr(pos, key, value)
 
     db.commit()
@@ -101,4 +101,3 @@ def delete_position(position_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Position not found.")
     db.delete(pos)
     db.commit()
-    return {"detail": f"Position {position_id} deleted."}
