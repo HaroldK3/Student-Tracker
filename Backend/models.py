@@ -1,7 +1,7 @@
 from sqlalchemy import Column, ForeignKey, Integer, String, Boolean, DateTime, Float
 from sqlalchemy.orm import relationship
 from Backend.db import Base
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, validator, constr
 from typing import Optional
 from datetime import datetime
 
@@ -128,16 +128,16 @@ class Positions(Base):
     __tablename__ = "Positions"
 
     PositionId = Column(Integer, primary_key=True, index=True)
-    PositionTitle = Column(String, nullable=False)    
+    Title = Column(String, nullable=False)    
     Company = Column(String, nullable=False)          
-    Location = Column(String, nullable=False)         
-    ContactName = Column(String, nullable=False)      
-    ContactEmail = Column(String, nullable=False)     
-    StartDate = Column(DateTime, nullable=False)      
-    EndDate = Column(DateTime, nullable=False)        
+    SiteLocation = Column(String, nullable=False)         
+    SupervisorName = Column(String, nullable=False)      
+    SupervisorEmail = Column(String, nullable=False)     
+    TermStart = Column(DateTime, nullable=False)      
+    TermEnd = Column(DateTime, nullable=False)        
     CreatedAtUtc = Column(DateTime, nullable=False, default=datetime.utcnow)
 
-##class Attendance(Base):
+
 
 
 

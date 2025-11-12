@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 
-from ..db import get_db
+from Backend.db import get_db
 from Backend.models import Positions
 
 router = APIRouter(prefix="/positions", tags=["Positions"])
@@ -17,15 +17,15 @@ def get_positions(db: Session = Depends(get_db)):
     rows = db.query(Positions).all()
     return [
         {
-            "PositionId": r.PositionId,
-            "PositionTitle": r.PositionTitle,
-            "Company": r.Company,
-            "Location": r.Location,
-            "ContactName": r.ContactName,
-            "ContactEmail": r.ContactEmail,
-            "StartDate": r.StartDate,
-            "EndDate": r.EndDate,
-            "CreatedAtUtc": r.CreatedAtUtc,
+        "PositionId": r.PositionId,
+        "Title": r.Title,
+        "Company": r.Company,
+        "SiteLocation": r.SiteLocation,
+        "SupervisorName": r.SupervisorName,
+        "SupervisorEmail": r.SupervisorEmail,
+        "TermStart": r.TermStart,
+        "TermEnd": r.TermEnd,
+        "CreatedAtUtc": r.CreatedAtUtc
         }
         for r in rows
     ]
