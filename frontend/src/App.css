@@ -1,0 +1,66 @@
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #7f9c96;
+  min-height: 25vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: rgb(4, 26, 68);
+}
+
+.App-link {
+  color: #08c3f7;
+}
+
+.admin-form {
+  margin-bottom: 1rem;
+}
+
+.error-text {
+  color: red;
+}
+
+.teacher-feedback-textarea {
+  width: 100%;
+  max-width: 600px;
+}
+
+.teacher-section {
+  margin-bottom: 1rem;
+}
+
+.logo-container {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.app-logo {
+  height: 140px;
+  width: auto;
+  margin-bottom: 10px;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

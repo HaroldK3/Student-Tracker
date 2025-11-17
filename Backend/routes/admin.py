@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -36,7 +36,15 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     if existing:
         raise HTTPException(status_code=400, detail="Email already in use.")
 
-    new_user = User(**user.model_dump(), CreatedAtUtc=datetime.utcnow().isoformat())
+    new_user = User(
+        FirstName=user.FirstName,
+        LastName=user.LastName,
+        Email=user.Email,
+        Role=user.Role.upper(),
+        CreatedAtUtc=datetime.now(timezone.utc).isoformat(),
+        IsActive=True,
+    )
+
     db.add(new_user)
     db.commit()
     db.refresh(new_user)

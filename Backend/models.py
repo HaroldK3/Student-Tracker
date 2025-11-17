@@ -1,7 +1,7 @@
 from sqlalchemy import Column, ForeignKey, Integer, String, Boolean, DateTime, Float
 from sqlalchemy.orm import relationship
 from Backend.db import Base
-from pydantic import BaseModel, validator, constr
+from pydantic import BaseModel, field_validator, constr
 from typing import Optional
 from datetime import datetime
 
@@ -26,11 +26,13 @@ class UserBase(BaseModel):
     Role: str 
     IsActive: bool = True
 
-    @validator("Role")
-    def valid_role(cls, value):
+    @field_validator("Role")
+    @classmethod
+    def validate_role(cls, value: str) -> str:
         value = value.upper()
         if value not in VALID_ROLES:
             raise ValueError(f"Role must be one of {VALID_ROLES}")
+        return value
 
 class UserCreate(UserBase):
     pass
@@ -39,19 +41,27 @@ class UserUpdate(BaseModel):
     FirstName: Optional[str] = None
     LastName: Optional[str] = None
     Email: Optional[str] = None
-    Role: Optional[constr(to_upper=True)] = None #type: ignore
+    Role: Optional[str] = None 
     IsActive: Optional[bool] = None
 
-    def valid_role(cls, value):
+    @field_validator("Role")
+    @classmethod
+
+
+    def validate_role_update(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return value
+        value = value.upper()
         if value not in VALID_ROLES:
-            raise ValueError(f"Role must be one of {VALID_ROLES}")
+            raise ValueError(f"Role must be one of: {VALID_ROLES}")
+        return value
 
 class UserOut(UserBase):
     UserId: int
     CreatedAtUtc: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 ## Students
 class Student(Base):
