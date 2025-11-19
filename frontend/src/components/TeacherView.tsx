@@ -1,5 +1,7 @@
+// src/components/TeacherView.tsx
 import React, { useEffect, useState } from "react";
 import api from "../api";
+import TeacherMap from "./TeacherMap";
 
 interface TeacherStudent {
   StudentId: number;
@@ -20,6 +22,15 @@ interface CheckIn {
   [key: string]: any;
 }
 
+interface StudentLocation {
+  StudentId: number;
+  FirstName: string;
+  LastName: string;
+  Lat: number;
+  Lng: number;
+  CheckInTime: string;
+}
+
 const TeacherView: React.FC = () => {
   const [students, setStudents] = useState<TeacherStudent[]>([]);
   const [loadingStudents, setLoadingStudents] = useState(false);
@@ -36,6 +47,12 @@ const TeacherView: React.FC = () => {
   const [feedbackText, setFeedbackText] = useState("");
   const [feedbackStatus, setFeedbackStatus] = useState("");
 
+  // NEW: locations (without map)
+  const [locations, setLocations] = useState<StudentLocation[]>([]);
+  const [loadingLocations, setLoadingLocations] = useState(false);
+  const [locationsError, setLocationsError] = useState("");
+
+  // ---- Load students list ----
   useEffect(() => {
     const loadStudents = async () => {
       setLoadingStudents(true);
@@ -56,6 +73,28 @@ const TeacherView: React.FC = () => {
     loadStudents();
   }, []);
 
+  // ---- Load today's locations ----
+  const loadLocations = async () => {
+    setLoadingLocations(true);
+    setLocationsError("");
+    try {
+      const resp = await api.get<StudentLocation[]>("/teacher/locations/today");
+      setLocations(resp.data || []);
+    } catch (err: any) {
+      console.error("Failed to load locations:", err);
+      const detail =
+        err?.response?.data?.detail || err?.message || "Unknown error";
+      setLocationsError(`Failed to load locations: ${detail}`);
+    } finally {
+      setLoadingLocations(false);
+    }
+  };
+
+  useEffect(() => {
+    loadLocations();
+  }, []);
+
+  // ---- Check-ins for a selected student ----
   const loadCheckIns = async (student: TeacherStudent) => {
     setLoadingCheckins(true);
     setCheckinsError("");
@@ -127,6 +166,55 @@ const TeacherView: React.FC = () => {
       <h2>Teacher View</h2>
       <p>View your students, check their recent check-ins, and send feedback.</p>
 
+      {/* -------- LOCATIONS (TABLE) -------- */}
+      <h3>Student Locations (Today)</h3>
+      <button onClick={loadLocations}>Refresh locations</button>
+
+      {loadingLocations && <p>Loading locations...</p>}
+      {locationsError && <p className="error-text">{locationsError}</p>}
+
+      {!loadingLocations && locations.length === 0 && !locationsError && (
+        <p>No location check-ins yet today.</p>
+      )}
+
+      {locations.length > 0 && (
+        <table>
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Latitude</th>
+              <th>Longitude</th>
+              <th>Time</th>
+              <th>Map</th>
+            </tr>
+          </thead>
+          <tbody>
+            {locations.map((loc) => (
+              <tr key={`${loc.StudentId}-${loc.CheckInTime}`}>
+                <td>
+                  {loc.FirstName} {loc.LastName} (ID {loc.StudentId})
+                </td>
+                <td>{loc.Lat.toFixed(5)}</td>
+                <td>{loc.Lng.toFixed(5)}</td>
+                <td>{new Date(loc.CheckInTime).toLocaleTimeString()}</td>
+                <td>
+                  <a
+                    href={`https://www.google.com/maps?q=${loc.Lat},${loc.Lng}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    View on map
+                  </a>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      <hr />
+
+      {/* -------- STUDENT TABLE SECTION -------- */}
       <h3>Students</h3>
       {loadingStudents && <p>Loading students...</p>}
       {studentsError && <p className="error-text">{studentsError}</p>}
@@ -160,9 +248,7 @@ const TeacherView: React.FC = () => {
                 </td>
                 <td>{s.Status || "-"}</td>
                 <td>
-                  <button onClick={() => handleSelectStudent(s)}>
-                    Select
-                  </button>
+                  <button onClick={() => handleSelectStudent(s)}>Select</button>
                 </td>
               </tr>
             ))}
@@ -170,6 +256,7 @@ const TeacherView: React.FC = () => {
         </table>
       )}
 
+      {/* -------- SELECTED STUDENT DETAILS -------- */}
       {selectedStudent && (
         <>
           <hr />
@@ -219,9 +306,7 @@ const TeacherView: React.FC = () => {
                       <td>{c.CheckInId}</td>
                       <td>{c.CheckInTime}</td>
                       <td>
-                        {c.Approved === 1 || c.Approved === true
-                          ? "Yes"
-                          : "No"}
+                        {c.Approved === 1 || c.Approved === true ? "Yes" : "No"}
                       </td>
                       <td>
                         {!(c.Approved === 1 || c.Approved === true) && (
@@ -240,6 +325,9 @@ const TeacherView: React.FC = () => {
           </div>
         </>
       )}
+    <hr />
+    <h3>Today's Student Locations</h3>
+    <TeacherMap />
     </div>
   );
 };

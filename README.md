@@ -1,91 +1,157 @@
-# 🎓 PathMate // Student-Tracker
-### A cross-platform Python application for managing student internships effectively.
+🎓 PathMate // Student-Tracker
 
-PathMate is a **cross-platform internship management system** that helps universities and organizations track student placements, monitor progress, and ensure accountability through geolocation-based check-ins.  
-It provides transparency and security for students, staff, and administrators.
+A cross-platform internship management system built with Python + React.
 
----
+PathMate is a cross-platform student internship tracking system designed to help universities and organizations monitor student placements, verify location-based check-ins, and maintain accurate progress logs.
+This repository includes a React frontend created using Create React App.
 
-## 🚀 Key Features
+🚀 Key Features
+📍 Location-Verified Check-ins
 
-### 📍 Location-Verified Check-ins
-- Uses **GPS/IP-based geolocation** to verify attendance at internship sites.
-- Ensures students are physically present at assigned locations.
+GPS/IP-based validation to confirm students are at their assigned internship sites.
 
-### ⏱️ Hours & Progress Tracking
-- Log hours worked and major milestones.
-- View detailed timesheets and progress reports.
+Ensures integrity and attendance accountability.
 
-### 👥 Multi-Role Access
-- Separate **dashboards for students, staff, and administrators**.
-- Role-based permissions ensure users only access what they need.
+⏱️ Hours & Progress Tracking
 
-### 📝 Feedback & Evaluation
-- Supervisors can submit reviews and performance evaluations.
-- Supports academic grading or compliance reviews.
+Track hours, milestones, and daily activities.
 
-### 📊 Analytics & Reports
-- Automatically generate attendance and performance reports.
-- Supports export for **academic credit tracking** and **compliance reporting**.
+View detailed timesheets and progress summaries.
 
-### 🔐 Secure Access
-- Implements **authentication and authorization** layers.
-- Protects sensitive student data with role-based permissions.
+👥 Multi-Role Access
 
----
+Dedicated dashboards for students, staff, and administrators.
 
-## 🧰 Tech Stack
+Role-based permissions for secure and streamlined access.
 
-| Layer | Technology |
-|-------|-------------|
-| **Frontend** | Kivy / React Native |
-| **Backend** | FastAPI |
-| **Database** | SQLite |
-| **Geolocation** | iPapi API |
-| **Deployment** | GitHub Actions |
+📝 Feedback & Evaluation
 
----
+Supervisors can submit evaluations and performance reviews.
 
-## 🗓️ Development Phases
+Supports academic grading and compliance tracking.
 
-### **Sprint 1: Planning & Setup**
-**Focus:** Requirements gathering, environment setup, UI wireframes, database schema, app branding.  
-**Deliverables:**
-- Defined user stories and INVEST criteria  
-- Figma wireframes or sketches  
-- Database ERD schema  
-- App name & logo finalized  
-- Repository and dependencies configured  
+📊 Analytics & Reports
 
-### **Sprint 2: Implementation & Testing**
-**Focus:** Core feature development and integration.  
-**Deliverables:**
-- Backend endpoints and API integration  
-- Basic student and admin dashboards  
-- Geolocation and authentication features  
-- Functional prototype demo  
-- Testing and debugging  
+Auto-generated reports for attendance and overall performance.
 
----
+Exportable for academic credit or institutional reporting.
 
-## 🧩 Known Issues / Future Improvements
--
+🔐 Secure Access
 
----
+Authentication & authorization layers.
 
-## 👩‍💻 Authors
-**Kaylee Harold**  
-**Palwasha Newell**  
-**Robert Freschi**  
-**Jorge Nunez**  
-**Toby Crabtree**  
-*East Tennessee State University*  
-📚 *Student Intern Tracker / PathMate Project*
+Protects student and organizational data.
 
----
+🧰 Tech Stack
+Layer	Technology
+Frontend	React (Create React App) / Kivy / React Native
+Backend	FastAPI
+Database	SQLite
+Geolocation	iPapi API
+Deployment	GitHub Actions
+🧪 React Frontend – Getting Started
 
-> _“Track progress. Build accountability. Empower student success.”_
+This frontend was bootstrapped with Create React App.
 
+📦 Available Scripts
 
+In the project directory, you can run:
 
+npm start
 
+Runs the app in development mode.
+Open http://localhost:3000
+ in your browser.
+Automatically reloads when changes are made.
+
+npm test
+
+Launches the interactive test runner.
+See official CRA documentation on testing.
+
+npm run build
+
+Builds the app for production in the build folder.
+Includes optimizations, minification, and hashed filenames.
+
+npm run eject
+
+⚠️ One-way operation — cannot be undone!
+
+Copies configuration files (Webpack, Babel, ESLint, etc.) directly into your project so you can fully customize them.
+
+📚 Learn More
+
+Create React App Docs — https://facebook.github.io/create-react-app/docs/getting-started
+
+React Documentation — https://reactjs.org
+
+FastAPI Documentation — https://fastapi.tiangolo.com
+
+🗓️ Development Phases
+Sprint 1: Planning & Setup
+
+Focus: Requirements, environment, wireframes, schema, branding.
+Deliverables:
+
+User stories (INVEST)
+
+Figma wireframes or sketches
+
+Database ERD
+
+App name & logo
+
+Repository structure + dependencies
+
+Sprint 2: Implementation & Testing
+
+Focus: Core feature coding & integration.
+Deliverables:
+
+Backend endpoints + API integration
+
+Student & admin dashboards
+
+Authentication & geolocation functionality
+
+Working prototype demo
+
+Testing & debugging
+
+🧩 Known Issues / Future Improvements
+
+(Section intentionally left open to update as development continues.)
+
+👩‍💻 Authors
+
+Kaylee Harold
+Palwasha Newell
+Robert Freschi
+Jorge Nunez
+Toby Crabtree
+East Tennessee State University
+
+📚 Student Intern Tracker / PathMate Project
+
+“Track progress. Build accountability. Empower student success.”
+
+======================================================================
+                      Running the program
+======================================================================
+
+Running the Backend and Frontend
+1. Start the Backend (FastAPI)
+Open PowerShell and run: Set-Location to root of folder (not backend folder) then run
+".\.venv\Scripts\Activate.ps1"
+"python -m uvicorn Backend.main:app --host 127.0.0.1 --port 8002 --log-level info"
+
+The backend will be available at http://127.0.0.1:8002/docs
+
+2. Start the Frontend (React)
+Open a new PowerShell window and run:
+Set-Location to frontend
+"npm install"
+"npm start"
+
+The frontend will open at http://localhost:3000

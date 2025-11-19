@@ -17,12 +17,13 @@ router = APIRouter(prefix="/admin", tags=["Admin"])
 
 ## Users display (multiple)
 @router.get("/users", response_model=List[UserOut])
-def get_users(status: int = 1, db: Session = Depends(get_db)):
-    users = db.query(User).filter(User.IsActive == status).all() ## Status can be called to allow filtering between 
+def get_users(status: bool = True, db: Session = Depends(get_db)):
+    # status is a boolean filter for active users (default True)
+    users = db.query(User).filter(User.IsActive == status).all()
     return users                                                 ## Active and inactive
     
 ## User display (one)
-@router.get("/users/{user_id)}", response_model=UserOut)
+@router.get("/users/{user_id}", response_model=UserOut)
 def get_user(user_id: int, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.UserId == user_id).first()
     if not user:
@@ -144,7 +145,8 @@ def delete_student(student_id: int, db: Session = Depends(get_db)):
     if not student:
         raise HTTPException(status_code=404, detail="Student not found.")
     
-    Student.Status = "Gone"
+    # soft-delete the specific student record
+    student.Status = "Gone"
 
     db.commit()
     return
@@ -179,8 +181,9 @@ def get_dashboard_metrics(db: Session = Depends(get_db)):
 @router.post("/assign", status_code=201)
 def assign_teacher(data: AssignmentCreate, db: Session = Depends(get_db)):
     student = db.query(Student).filter(Student.StudentId == data.StudentId).first()
+    # AssignmentCreate provides UserId as the instructor's user id
     instructor = db.query(User).filter(
-        User.UserId == data.InstructorUserId,
+        User.UserId == data.UserId,
         User.Role == "INSTRUCTOR"
         ).first()
 

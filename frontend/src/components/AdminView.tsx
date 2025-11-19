@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import api from "../api";
+import "./AdminView.css";
 
 type Role = "ADMIN" | "INSTRUCTOR" | "IT";
 
@@ -93,10 +94,9 @@ const AdminView: React.FC = () => {
       <h2>Admin View</h2>
 
       {error && <p className="error-text">{error}</p>}
-
       <form onSubmit={handleSubmit} className="admin-form">
         <h3>Create User</h3>
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+        <div className="admin-form-fields">
           <input
             type="text"
             name="FirstName"

@@ -1,8 +1,10 @@
+// frontend/src/api.ts
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:8000",
+  baseURL: "http://127.0.0.1:8002",   // backend runs on 8002 (Splunk occupied 8000)
 });
+
 
 // ------- Types that match your backend models -------
 

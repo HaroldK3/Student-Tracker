@@ -1,13 +1,15 @@
 from sqlalchemy import Column, ForeignKey, Integer, String, Boolean, DateTime, Float
 from sqlalchemy.orm import relationship
 from Backend.db import Base
-from pydantic import BaseModel, field_validator, constr
+from pydantic import BaseModel, field_validator
 from typing import Optional
 from datetime import datetime
 
 VALID_ROLES = {"ADMIN", "INSTRUCTOR", "IT"}
 
-## Users
+# ========================
+#   USERS
+# ========================
 class User(Base):
     __tablename__ = "Users"
 
@@ -19,11 +21,12 @@ class User(Base):
     CreatedAtUtc = Column(String, nullable=False)
     IsActive = Column(Boolean, default=True)
 
+
 class UserBase(BaseModel):
     FirstName: str
     LastName: str
     Email: str
-    Role: str 
+    Role: str
     IsActive: bool = True
 
     @field_validator("Role")
@@ -34,20 +37,20 @@ class UserBase(BaseModel):
             raise ValueError(f"Role must be one of {VALID_ROLES}")
         return value
 
+
 class UserCreate(UserBase):
     pass
+
 
 class UserUpdate(BaseModel):
     FirstName: Optional[str] = None
     LastName: Optional[str] = None
     Email: Optional[str] = None
-    Role: Optional[str] = None 
+    Role: Optional[str] = None
     IsActive: Optional[bool] = None
 
     @field_validator("Role")
     @classmethod
-
-
     def validate_role_update(cls, value: Optional[str]) -> Optional[str]:
         if value is None:
             return value
@@ -56,6 +59,7 @@ class UserUpdate(BaseModel):
             raise ValueError(f"Role must be one of: {VALID_ROLES}")
         return value
 
+
 class UserOut(UserBase):
     UserId: int
     CreatedAtUtc: str
@@ -63,9 +67,13 @@ class UserOut(UserBase):
     class Config:
         from_attributes = True
 
-## Students
+
+# ========================
+#   STUDENTS
+# ========================
 class Student(Base):
     __tablename__ = "Students"
+
     StudentId = Column(Integer, primary_key=True, index=True)
     UniversityId = Column(Integer, unique=True, nullable=False)
     FirstName = Column(String(100), nullable=False)
@@ -75,8 +83,9 @@ class Student(Base):
     Program = Column(String(120), nullable=True)
     Year = Column(String(20), nullable=True)
     Status = Column(String(20), nullable=False, default="Active")
-    GPA = Column(Float, nullable = True)
+    GPA = Column(Float, nullable=True)
     CreatedAtUtc = Column(DateTime, default=datetime.utcnow)
+
 
 class StudentOut(BaseModel):
     UniversityId: int
@@ -90,7 +99,8 @@ class StudentOut(BaseModel):
     GPA: Optional[float] = None
 
     class Config:
-        omr_mode = True
+        from_attributes = True
+
 
 class StudentCreate(BaseModel):
     UniversityId: int
@@ -102,7 +112,8 @@ class StudentCreate(BaseModel):
     Year: str
     Status: str = "IsActive"
     GPA: Optional[float] = None
-    
+
+
 class StudentUpdate(BaseModel):
     FirstName: Optional[str] = None
     LastName: Optional[str] = None
@@ -114,7 +125,9 @@ class StudentUpdate(BaseModel):
     GPA: Optional[float] = None
 
 
-##class StudentAssignments(Base):
+# ========================
+#   STUDENT ASSIGNMENTS
+# ========================
 class StudentAssignment(Base):
     __tablename__ = "StudentAssignments"
 
@@ -126,6 +139,7 @@ class StudentAssignment(Base):
     Student = relationship("Student", backref="Assignments")
     Instructor = relationship("User", backref="AssignedStudents")
 
+
 class AssignmentCreate(BaseModel):
     StudentId: int
     UserId: int
@@ -133,18 +147,20 @@ class AssignmentCreate(BaseModel):
     CohortId: Optional[int] = None
 
 
-## Other
+# ========================
+#   POSITIONS
+# ========================
 class Positions(Base):
     __tablename__ = "Positions"
 
     PositionId = Column(Integer, primary_key=True, index=True)
-    Title = Column(String, nullable=False)    
-    Company = Column(String, nullable=False)          
-    SiteLocation = Column(String, nullable=False)         
-    SupervisorName = Column(String, nullable=False)      
-    SupervisorEmail = Column(String, nullable=False)     
-    TermStart = Column(DateTime, nullable=False)      
-    TermEnd = Column(DateTime, nullable=False)        
+    Title = Column(String, nullable=False)
+    Company = Column(String, nullable=False)
+    SiteLocation = Column(String, nullable=False)
+    SupervisorName = Column(String, nullable=False)
+    SupervisorEmail = Column(String, nullable=False)
+    TermStart = Column(DateTime, nullable=False)
+    TermEnd = Column(DateTime, nullable=False)
     CreatedAtUtc = Column(DateTime, nullable=False, default=datetime.utcnow)
 
 
@@ -157,6 +173,7 @@ class PositionCreate(BaseModel):
     TermStart: Optional[datetime] = None
     TermEnd: Optional[datetime] = None
 
+
 class PositionUpdate(BaseModel):
     Title: Optional[str] = None
     Company: Optional[str] = None
@@ -167,5 +184,67 @@ class PositionUpdate(BaseModel):
     TermEnd: Optional[datetime] = None
 
 
+# ========================
+#   ATTENDANCE (with location)
+# ========================
+class Attendance(Base):
+    __tablename__ = "Attendance"
+
+    AttendanceId = Column(Integer, primary_key=True, index=True)
+    StudentId = Column(Integer, ForeignKey("Students.StudentId"), nullable=False)
+    # Timestamps for checkin/checkout
+    CheckInUtc = Column(DateTime, default=datetime.utcnow)
+    CheckOutUtc = Column(DateTime, nullable=True)
+    # Approval flag
+    IsApproved = Column(Boolean, default=False)
+    # Optional status and geo coordinates
+    Status = Column(String(20), nullable=False, default="PRESENT")  # PRESENT/ABSENT/TARDY
+    Lat = Column(Float, nullable=True)   # latitude
+    Lng = Column(Float, nullable=True)   # longitude
+    CreatedAtUtc = Column(DateTime, default=datetime.utcnow)
+
+    Student = relationship("Student", backref="AttendanceRecords")
 
 
+class AttendanceCreate(BaseModel):
+    StudentId: int
+    Status: str = "PRESENT"
+    Lat: Optional[float] = None
+    Lng: Optional[float] = None
+
+
+class StudentLocationOut(BaseModel):
+    StudentId: int
+    FirstName: str
+    LastName: str
+    Lat: float
+    Lng: float
+    CheckInTime: datetime
+
+    class Config:
+        orm_mode = True
+
+
+# ========================
+#   STUDENT LOCATIONS
+# ========================
+class StudentLocation(Base):
+    __tablename__ = "StudentLocations"
+
+    StudentLocationId = Column(Integer, primary_key=True, index=True)
+    StudentId = Column(Integer, ForeignKey("Students.StudentId"), nullable=False)
+    Lat = Column(Float, nullable=False)
+    Lng = Column(Float, nullable=False)
+    CheckInUtc = Column(DateTime, default=datetime.utcnow)
+    CreatedAtUtc = Column(DateTime, default=datetime.utcnow)
+
+    Student = relationship("Student", backref="LocationRecords")
+
+
+class StudentLocationCreate(BaseModel):
+    StudentId: int
+    Lat: float
+    Lng: float
+
+    class Config:
+        from_attributes = True

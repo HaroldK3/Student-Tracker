@@ -1,3 +1,4 @@
+// src/components/StudentView.tsx
 import React, { useEffect, useState } from "react";
 import api from "../api";
 
@@ -7,7 +8,7 @@ interface StudentViewProps {
 
 interface StudentProfile {
   StudentId: number;
-  UniversityId: string;
+  UniversityId: number;
   FirstName: string;
   LastName: string;
   Email: string;
@@ -22,13 +23,17 @@ interface StudentProfile {
 const StudentView: React.FC<StudentViewProps> = ({ studentId }) => {
   const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [error, setError] = useState<string>("");
+  const [checkinMessage, setCheckinMessage] = useState<string>("");
 
+  // ---- Load student profile from backend ----
   useEffect(() => {
     const loadProfile = async () => {
       try {
         setError("");
         setProfile(null);
-        const res = await api.get<StudentProfile>(`/student/profile/${studentId}`);
+
+        // matches Backend.routes.admin: /admin/student/{student_id}
+        const res = await api.get<StudentProfile>(`/admin/student/${studentId}`);
         setProfile(res.data);
       } catch (e: any) {
         console.error(e);
@@ -40,6 +45,40 @@ const StudentView: React.FC<StudentViewProps> = ({ studentId }) => {
       loadProfile();
     }
   }, [studentId]);
+
+  // ---- Location check-in ----
+  const handleLocationCheckIn = async () => {
+    setCheckinMessage("");
+
+    if (!navigator.geolocation) {
+      setCheckinMessage("Geolocation is not supported in this browser.");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude } = pos.coords;
+        try {
+          await api.post("/student/checkin/location", {
+            StudentId: studentId,
+            Status: "PRESENT",
+            Lat: latitude,
+            Lng: longitude,
+          });
+          setCheckinMessage("Check-in saved with your current location ✅");
+        } catch (err: any) {
+          console.error(err);
+          setCheckinMessage("Failed to send check-in to the server.");
+        }
+      },
+      (geoErr: GeolocationPositionError) => {
+        console.error(geoErr);
+        setCheckinMessage(
+          "Could not get your location. Please allow location access."
+        );
+      }
+    );
+  };
 
   return (
     <div className="card">
@@ -82,6 +121,14 @@ const StudentView: React.FC<StudentViewProps> = ({ studentId }) => {
           </p>
         </>
       )}
+
+      <hr />
+
+      <h3>Location Check-in</h3>
+      <button onClick={handleLocationCheckIn}>
+        Check in at my current location
+      </button>
+      {checkinMessage && <p className="info-text">{checkinMessage}</p>}
     </div>
   );
 };

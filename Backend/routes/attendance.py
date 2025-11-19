@@ -1,27 +1,11 @@
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session, relationship
-from sqlalchemy import Column, Integer, DateTime, Boolean, ForeignKey
-from ..db import get_db, Base
-from Backend.models import Student
+from sqlalchemy.orm import Session
+from ..db import get_db
+from Backend.models import Student, Attendance
 
 # router setup
 router = APIRouter(prefix="/attendance", tags=["Attendance"])
-
-# -----------------------------------------------------------------------------
-# Local Attendance model (since it's not in Backend/models.py right now)
-# -----------------------------------------------------------------------------
-class Attendance(Base):
-    __tablename__ = "Attendance"
-
-    AttendanceId = Column(Integer, primary_key=True, index=True)
-    StudentId = Column(Integer, ForeignKey("Students.StudentId"), nullable=False)
-    CheckInUtc = Column(DateTime, default=datetime.utcnow)
-    CheckOutUtc = Column(DateTime, nullable=True)
-    IsApproved = Column(Boolean, default=False)
-
-    student = relationship("Student")
-
 
 # -----------------------------------------------------------------------------
 # ENDPOINTS

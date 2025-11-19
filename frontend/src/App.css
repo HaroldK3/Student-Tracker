@@ -64,3 +64,27 @@
     transform: rotate(360deg);
   }
 }
+
+.teacher-map-wrapper {
+  height: 400px;
+  margin-top: 1rem;
+}
+
+.teacher-map {
+  height: 100%;
+  width: 100%;
+}
+
+.teacher-section {
+  margin-bottom: 1rem;
+}
+
+.teacher-feedback-textarea {
+  width: 100%;
+  max-width: 600px;
+}
+
+.error-text {
+  color: red;
+}
+

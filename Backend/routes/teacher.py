@@ -1,12 +1,14 @@
-from datetime import datetime
+from datetime import datetime, date, time
 import shutil
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 from sqlalchemy import text
+from sqlalchemy.exc import OperationalError
 from ..db import get_db                   
 from Backend.models import User, UserOut, UserCreate, UserUpdate 
-from Backend.models import StudentOut, StudentCreate, Student        
+from Backend.models import StudentOut, StudentCreate, Student, Attendance, StudentLocationOut, StudentLocation       
 from typing import List
+from Backend.db import engine
 
 router = APIRouter(prefix="/teacher", tags=["Teacher"])
 
@@ -73,27 +75,45 @@ def get_time_clock(db: Session = Depends(get_db)):
 ## Get attendance sheet for specified time
 @router.get("/attendance/{date}")
 def get_attendance_sheet(date: str, db: Session = Depends(get_db)):
-    result = db.execute(
-        text("""
-            SELECT * FROM Attendance 
-            WHERE DATE(AttendanceDate) = DATE(:date)
-        """),
-        {"date": date}
-    ).fetchall()
-    return {"attendance": [dict(row._mapping) for row in result]}
+    # Use the Attendance model's CheckInUtc to filter by date
+    try:
+        qdate = datetime.fromisoformat(date).date()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid date format. Use ISO format YYYY-MM-DD")
+
+    start = datetime.combine(qdate, time.min)
+    end = datetime.combine(qdate, time.max)
+
+    rows = (
+        db.query(Attendance)
+        .filter(Attendance.CheckInUtc >= start, Attendance.CheckInUtc <= end)
+        .all()
+    )
+
+    return {"attendance": [
+        {
+            "AttendanceId": r.AttendanceId,
+            "StudentId": r.StudentId,
+            "CheckInUtc": r.CheckInUtc,
+            "CheckOutUtc": r.CheckOutUtc,
+            "IsApproved": r.IsApproved,
+            "Lat": r.Lat,
+            "Lng": r.Lng,
+        }
+        for r in rows
+    ]}
 
 ## post attendance sheet
 @router.post("/attendance")
 def post_attendance_sheet(data: dict, db: Session = Depends(get_db)):
     try:
         for record in data.get("students", []):
-            db.execute(
-                text("""
-                    INSERT INTO Attendance (StudentId, Status, AttendanceDate)
-                    VALUES (:sid, :status, :date)
-                """),
-                {"sid": record["StudentId"], "status": record["Status"], "date": data["Date"]}
+            att = Attendance(
+                StudentId=record["StudentId"],
+                Status=record.get("Status", "PRESENT"),
+                CheckInUtc=datetime.fromisoformat(data.get("Date")) if data.get("Date") else datetime.utcnow(),
             )
+            db.add(att)
         db.commit()
         return {"message": "Attendance sheet saved successfully."}
     except Exception as e:
@@ -104,13 +124,10 @@ def post_attendance_sheet(data: dict, db: Session = Depends(get_db)):
 @router.put("/attendance/{attendance_id}")
 def update_attendance(attendance_id: int, status: str, db: Session = Depends(get_db)):
     try:
-        db.execute(
-            text("""
-                UPDATE Attendance SET Status = :status
-                WHERE AttendanceId = :aid
-            """),
-            {"aid": attendance_id, "status": status}
-        )
+        record = db.query(Attendance).filter(Attendance.AttendanceId == attendance_id).first()
+        if not record:
+            raise HTTPException(status_code=404, detail="Attendance record not found.")
+        record.Status = status
         db.commit()
         return {"message": f"Attendance record {attendance_id} updated."}
     except Exception as e:
@@ -120,23 +137,31 @@ def update_attendance(attendance_id: int, status: str, db: Session = Depends(get
 ## get a check in
 @router.get("/check_in/{student_id}")
 def get_check_in(student_id: int, db: Session = Depends(get_db)):
-    result = db.execute(
-        text("SELECT * FROM CheckIns WHERE StudentId = :sid ORDER BY CheckInTime DESC"),
-        {"sid": student_id}
-    ).fetchall()
-    return {"checkins": [dict(row._mapping) for row in result]}
+    # Return attendance records for the student (most recent first)
+    rows = (
+        db.query(Attendance)
+        .filter(Attendance.StudentId == student_id)
+        .order_by(Attendance.CheckInUtc.desc())
+        .all()
+    )
+    return {"checkins": [
+        {
+            "CheckInId": r.AttendanceId,
+            "StudentId": r.StudentId,
+            "CheckInTime": r.CheckInUtc,
+            "Approved": r.IsApproved,
+        }
+        for r in rows
+    ]}
 
 ## approve a check in
 @router.put("/check_in/{checkin_id}/approve")
 def approve_check_in(checkin_id: int, db: Session = Depends(get_db)):
     try:
-        db.execute(
-            text("""
-                UPDATE CheckIns SET Approved = 1
-                WHERE CheckInId = :cid
-            """),
-            {"cid": checkin_id}
-        )
+        record = db.query(Attendance).filter(Attendance.AttendanceId == checkin_id).first()
+        if not record:
+            raise HTTPException(status_code=404, detail="Check-in not found.")
+        record.IsApproved = True
         db.commit()
         return {"message": f"Check-in {checkin_id} approved."}
     except Exception as e:
@@ -163,3 +188,109 @@ def upload_resource(file: UploadFile = File(...), db: Session = Depends(get_db))
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
+    
+    ## get locations of students
+@router.get("/locations/today", response_model=list[StudentLocationOut])
+def get_today_locations(db: Session = Depends(get_db)):
+    """
+    Returns latest attendance entries with location for today,
+    joined with student names, for the map view.
+    """
+    today: date = datetime.utcnow().date()
+    start_of_day = datetime.combine(today, time.min)
+    end_of_day = datetime.combine(today, time.max)
+
+    # Check the actual Attendance table schema — older DBs may not have Lat/Lng/StudentId
+    try:
+        with engine.connect() as conn:
+            res = conn.execute("PRAGMA table_info('Attendance')")
+            cols = [row[1] for row in res.fetchall()]
+    except Exception:
+        cols = []
+
+    required = {"StudentId", "Lat", "Lng", "CreatedAtUtc"}
+    if not required.issubset(set(cols)):
+        # Attendance table lacks location columns — try StudentLocations table instead
+        try:
+            rows = (
+                db.query(
+                    StudentLocation.StudentId,
+                    Student.FirstName,
+                    Student.LastName,
+                    StudentLocation.Lat,
+                    StudentLocation.Lng,
+                    StudentLocation.CheckInUtc.label("CheckInTime"),
+                )
+                .join(Student, Student.StudentId == StudentLocation.StudentId)
+                .filter(
+                    StudentLocation.CheckInUtc >= start_of_day,
+                    StudentLocation.CheckInUtc <= end_of_day,
+                )
+                .all()
+            )
+        except Exception:
+            return []
+    else:
+        # Proceed with the normal query when columns exist
+        try:
+            rows = (
+                db.query(
+                    Attendance.StudentId,
+                    Student.FirstName,
+                    Student.LastName,
+                    Attendance.Lat,
+                    Attendance.Lng,
+                    Attendance.CreatedAtUtc.label("CheckInTime"),
+                )
+                .join(Student, Student.StudentId == Attendance.StudentId)
+                .filter(
+                    Attendance.CreatedAtUtc >= start_of_day,
+                    Attendance.CreatedAtUtc <= end_of_day,
+                    Attendance.Lat.isnot(None),
+                    Attendance.Lng.isnot(None),
+                )
+                .all()
+            )
+        except OperationalError:
+            # Defensive: if query fails, return empty list
+            return []
+
+    # Proceed with the normal query when columns exist
+    try:
+        rows = (
+            db.query(
+                Attendance.StudentId,
+                Student.FirstName,
+                Student.LastName,
+                Attendance.Lat,
+                Attendance.Lng,
+                Attendance.CreatedAtUtc.label("CheckInTime"),
+            )
+            .join(Student, Student.StudentId == Attendance.StudentId)
+            .filter(
+                Attendance.CreatedAtUtc >= start_of_day,
+                Attendance.CreatedAtUtc <= end_of_day,
+                Attendance.Lat.isnot(None),
+                Attendance.Lng.isnot(None),
+            )
+            .all()
+        )
+    except OperationalError:
+        # Defensive: if the Attendance table/schema doesn't match the model
+        # (e.g. missing StudentId/Lat/Lng columns), return empty list
+        return []
+
+    # Convert to pydantic-friendly objects
+    locations: list[StudentLocationOut] = []
+    for r in rows:
+        locations.append(
+            StudentLocationOut(
+                StudentId=r.StudentId,
+                FirstName=r.FirstName,
+                LastName=r.LastName,
+                Lat=r.Lat,
+                Lng=r.Lng,
+                CheckInTime=r.CheckInTime,
+            )
+        )
+    return locations

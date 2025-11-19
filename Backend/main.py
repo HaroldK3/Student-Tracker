@@ -1,6 +1,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from Backend.db import Base, engine
+from Backend import models
 from Backend.routes import admin, positions, attendance, student, teacher
+
+# Make sure all tables exist
+def create_tables():
+    Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
@@ -23,3 +29,7 @@ app.include_router(teacher.router)
 @app.get("/")
 def root():
     return {"message": "Student tracker api running"}
+
+@app.on_event("startup")
+def on_startup():
+    create_tables()
