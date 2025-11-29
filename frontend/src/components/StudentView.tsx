@@ -1,6 +1,7 @@
 // src/components/StudentView.tsx
 import React, { useEffect, useState } from "react";
 import api from "../api";
+import "./StudentView.css";
 
 interface StudentViewProps {
   studentId: number;
@@ -81,55 +82,79 @@ const StudentView: React.FC<StudentViewProps> = ({ studentId }) => {
   };
 
   return (
-    <div className="card">
-      <h2>Student View</h2>
-      <p>Student ID from App: {studentId}</p>
+    <section className="card student-card">
+      <header className="student-header">
+        <h2 className="student-title">Student View</h2>
+        <p className="student-subtitle">
+          Student ID from App: <span className="student-id">{studentId}</span>
+        </p>
+      </header>
 
       {error && <p className="error-text">{error}</p>}
       {!error && !profile && <p>Loading profile...</p>}
 
       {profile && (
-        <>
-          <h3>Profile</h3>
-          <p>
-            <strong>Name:</strong> {profile.FirstName} {profile.LastName}
-          </p>
-          <p>
-            <strong>University ID:</strong> {profile.UniversityId}
-          </p>
-          <p>
-            <strong>Email:</strong> {profile.Email}
-          </p>
-          <p>
-            <strong>Phone:</strong> {profile.PhoneE164 || "—"}
-          </p>
-          <p>
-            <strong>Program:</strong> {profile.Program}
-          </p>
-          <p>
-            <strong>Year:</strong> {profile.Year}
-          </p>
-          <p>
-            <strong>Status:</strong> {profile.Status}
-          </p>
-          <p>
-            <strong>GPA:</strong> {profile.GPA ?? "N/A"}
-          </p>
-          <p>
-            <strong>Created At:</strong>{" "}
-            {new Date(profile.CreatedAtUtc).toLocaleString()}
-          </p>
-        </>
+        <div className="student-section">
+          <h3 className="student-section-title">Profile</h3>
+
+          <dl className="student-fields">
+            <div className="student-field">
+              <dt>Name:</dt>
+              <dd>
+                {profile.FirstName} {profile.LastName}
+              </dd>
+            </div>
+            <div className="student-field">
+              <dt>University ID:</dt>
+              <dd>{profile.UniversityId}</dd>
+            </div>
+            <div className="student-field">
+              <dt>Email:</dt>
+              <dd>{profile.Email}</dd>
+            </div>
+            <div className="student-field">
+              <dt>Phone:</dt>
+              <dd>{profile.PhoneE164 || "—"}</dd>
+            </div>
+            <div className="student-field">
+              <dt>Program:</dt>
+              <dd>{profile.Program}</dd>
+            </div>
+            <div className="student-field">
+              <dt>Year:</dt>
+              <dd>{profile.Year}</dd>
+            </div>
+            <div className="student-field">
+              <dt>Status:</dt>
+              <dd>{profile.Status}</dd>
+            </div>
+            <div className="student-field">
+              <dt>GPA:</dt>
+              <dd>{profile.GPA ?? "N/A"}</dd>
+            </div>
+            <div className="student-field">
+              <dt>Created At:</dt>
+              <dd>{new Date(profile.CreatedAtUtc).toLocaleString()}</dd>
+            </div>
+          </dl>
+        </div>
       )}
 
-      <hr />
-
-      <h3>Location Check-in</h3>
-      <button onClick={handleLocationCheckIn}>
-        Check in at my current location
-      </button>
-      {checkinMessage && <p className="info-text">{checkinMessage}</p>}
-    </div>
+      <div className="student-section">
+        <h3 className="student-section-title">Location Check-in</h3>
+        <button
+          className="student-checkin-btn"
+          onClick={handleLocationCheckIn}
+        >
+          Check in at my current location
+        </button>
+        {checkinMessage && (
+          <p className="info-text student-checkin-message">
+            {checkinMessage}
+          </p>
+        )}
+      </div>
+    </section>
   );
 };
 

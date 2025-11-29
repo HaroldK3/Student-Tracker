@@ -1,30 +1,68 @@
-import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import api from '../api';
-import 'leaflet/dist/leaflet.css';
+// src/components/TeacherMap.tsx
+import React, { useEffect, useState } from "react";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import api from "../api";
+import "leaflet/dist/leaflet.css";
 
-export default function TeacherMap() {
-  const [locs, setLocs] = useState<any[]>([]);
+interface StudentLocation {
+  StudentId: number;
+  FirstName: string;
+  LastName: string;
+  Lat: number;
+  Lng: number;
+  CheckInTime: string;
+}
+
+const TeacherMap: React.FC = () => {
+  const [locs, setLocs] = useState<StudentLocation[]>([]);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    api.get('/teacher/locations/today').then(r => setLocs(r.data.value || r.data)).catch(console.error);
+    api
+      .get<StudentLocation[]>("/teacher/locations/today")
+      .then((res) => {
+        const data = Array.isArray(res.data)
+          ? res.data
+          : (res.data as any).value || [];
+        setLocs(data);
+      })
+      .catch((err) => {
+        console.error("Failed to load map locations:", err);
+        setError("Failed to load map locations.");
+      });
   }, []);
 
-  if (!locs.length) return <div>No check-ins yet.</div>;
+  if (error) {
+    return <p className="error-text">{error}</p>;
+  }
 
-  const center = [locs[0].Lat, locs[0].Lng];
+  if (!locs.length) {
+    return <p className="teacher-muted">No check-ins yet.</p>;
+  }
+
+  const center: [number, number] = [locs[0].Lat, locs[0].Lng];
 
   return (
-    <MapContainer center={center as [number, number]} zoom={13} style={{ height: 400 }}>
-      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-      {locs.map(l => (
-        <Marker key={l.StudentId + l.CheckInTime} position={[l.Lat, l.Lng]}>
-          <Popup>
-            {l.FirstName} {l.LastName}<br />
-            {new Date(l.CheckInTime).toLocaleTimeString()}
-          </Popup>
-        </Marker>
-      ))}
-    </MapContainer>
+    <div className="teacher-map-shell">
+      <MapContainer
+        center={center}
+        zoom={13}
+        scrollWheelZoom={false}
+        className="teacher-map-inner"
+      >
+        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        {locs.map((l) => (
+          <Marker key={`${l.StudentId}-${l.CheckInTime}`} position={[l.Lat, l.Lng]}>
+            <Popup>
+              {l.FirstName} {l.LastName}
+              <br />
+              {new Date(l.CheckInTime).toLocaleTimeString()}
+            </Popup>
+          </Marker>
+        ))}
+      </MapContainer>
+    </div>
   );
-}
+};
+
+export default TeacherMap;
